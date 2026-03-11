@@ -8,14 +8,14 @@ class MomentumAgent:
         self.history = []
 
     def act(self, state):
-        prices = state[self.num_companies:2*self.num_companies]
-        self.history.append(prices)
+        prices = state[self.num_companies:2*self.num_companies] # slicer para obter apenas os preços. Vai desde o numero de empresas até o dobro do número de empresas, assumindo que o estado é estruturado como [holdings, prices]
+        self.history.append(prices.copy()) # adiciona os preços atuais ao histórico. Usa copy para evitar que futuras modificações em prices afetem o histórico
 
-        if len(self.history) < self.window + 1:
+        if len(self.history) < self.window + 1: # se ainda não houver histórico suficiente para calcular o momentum, escolhe uma ação aleatória
             return np.random.choice(self.num_actions)
 
         # Calculate momentum
-        momentum = momentum = self.history[-1] - self.history[-self.window-1]
+        momentum = self.history[-1] - self.history[-self.window-1] # calcula o momentum como a diferença entre o preço atual e o preço de n passos atrás (definido pela janela)
         actions = []
 
         for m in momentum:
