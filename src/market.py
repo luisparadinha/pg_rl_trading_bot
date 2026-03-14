@@ -18,6 +18,28 @@ def get_stock_data(companies):
     output = output.drop(columns = ['Date'])
     return output.values
 
+# yfinance output format has changed over time (often MultiIndex columns).
+# This helper extracts the "Close" price robustly across formats.
+def extract_close(download_df: pd.DataFrame) -> pd.DataFrame:
+    if isinstance(download_df.columns, pd.MultiIndex):
+        # Common formats:
+        # 1) columns = (Price, Ticker)   e.g., ("Close", "AAPL")
+        # 2) columns = (Ticker, Price)   e.g., ("AAPL", "Close")
+        lvl0 = set(map(str, download_df.columns.get_level_values(0)))
+        lvl1 = set(map(str, download_df.columns.get_level_values(1)))
+        if "Close" in lvl0:
+            close_df = download_df["Close"]
+        elif "Close" in lvl1:
+            close_df = download_df.xs("Close", level=1, axis=1)
+        else:
+            raise ValueError("Couldn't find 'Close' in downloaded columns. Inspect download_df.columns.")
+    else:
+        # Single ticker case or older formats
+        if "Close" in download_df.columns:
+            close_df = download_df[["Close"]].copy()
+        else:
+            raise ValueError("Couldn't find 'Close' in downloaded columns. Inspect download_df.columns.")
+    return close_df
 
 class market:
     def __init__(self, companies, budget=1e4):
