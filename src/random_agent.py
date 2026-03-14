@@ -1,6 +1,6 @@
 import numpy as np
 
-class Agent:
+class random_agent:
     def __init__(self, num_actions):
         self.num_actions = num_actions
         

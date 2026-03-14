@@ -41,7 +41,6 @@ class market:
         return self._get_state()
 
     def new_day(self, action):
-
         previous_val = self._get_eval()
         self.today += 1
         self.stock_price = self.data[self.today]
@@ -82,8 +81,6 @@ class market:
 
     def _get_eval(self):
         return self.stocks.dot(self.stock_price) + self.money_available
-
-
 
     def _get_state(self):
         state = np.zeros(self.state_size) #[0,0,0,0,0,0,0]

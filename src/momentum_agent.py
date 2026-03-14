@@ -1,6 +1,6 @@
 import numpy as np
 
-class MomentumAgent:
+class momentum_agent:
     def __init__(self, num_actions, num_companies, window=3):
         self.num_actions = num_actions
         self.num_companies = num_companies
@@ -32,3 +32,6 @@ class MomentumAgent:
             action_index += a * (3 ** (self.num_companies - i - 1))
 
         return action_index
+
+    def reset(self):
+        self.history = []
