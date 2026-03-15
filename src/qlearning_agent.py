@@ -41,6 +41,10 @@ class qlearning_agent:
         # we use a dict because the state space is too large to pre-build (unlike grid world)
         self.Q = {}
 
+        self.state_visits = {}
+
+        self.state_action_visits = {}
+
     # ===== Internal helper methods =====
 
     def _state_key(self, state): # _ before method name indicates it's intended to be internal/private
@@ -88,3 +92,24 @@ class qlearning_agent:
         # decay epsilon after each learning step
         if done:
             self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+
+        if state_key not in self.state_visits:
+            self.state_visits[state_key] = 0
+        self.state_visits[state_key] += 1
+
+        pair = (state_key, action)
+        if pair not in self.state_action_visits:
+            self.state_action_visits[pair] = 0
+        self.state_action_visits[pair] += 1
+
+def q_table_stats(self, run=None):
+    total_states = len(self.Q)
+    visited_more_than_once = sum(1 for v in self.state_visits.values() if v > 1)
+    label = f"Run {run}" if run is not None else "Agent"
+
+    print(f"--- {label} ---")
+    print(f"Unique states visited:          {total_states}")
+    print(f"States visited more than once:  {visited_more_than_once} / {total_states} ({100 * visited_more_than_once / total_states:.1f}%)")
+    print(f"Total Q-table entries:          {total_states * self.num_actions}")
+    print(f"Actions per state:              {self.num_actions}")
+    print(f"Current epsilon:                {self.epsilon:.4f}")

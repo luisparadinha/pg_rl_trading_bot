@@ -42,7 +42,7 @@ def extract_close(download_df: pd.DataFrame) -> pd.DataFrame:
     return close_df
 
 class market:
-    def __init__(self, companies, budget=1e4):
+    def __init__(self, companies, budget=1e4, volatility_window=20):
         self.data = get_stock_data(companies)
         self.budget = budget
         self.total_days = self.data.shape[0]
@@ -50,7 +50,43 @@ class market:
         self.index_actions = np.arange(3**self.total_companies)
         self.action_list = list(map(list,itertools.product([0,1,2],repeat=self.total_companies)))
         self.state_size = self.total_companies * 2 + 1
+        # precompute volatility once: rolling std of daily returns, discretized into 0=low, 1=medium, 2=high
+        self.volatility = self._compute_volatility(volatility_window)
         self.start()
+
+    def _compute_volatility(self, window):
+        # compute daily returns: (price_today - price_yesterday) / price_yesterday
+        prices = pd.DataFrame(self.data)
+        daily_returns = prices.pct_change()
+
+        # rolling std of returns over 'window' days — higher = more volatile
+        rolling_vol = daily_returns.rolling(window=window).std()
+
+        # discretize into 3 bins per company: 0=low, 1=medium, 2=high
+        # using percentile-based cuts so bins are balanced across the data
+        discretized = np.zeros_like(self.data, dtype=int)
+        for company in range(self.total_companies):
+            col = rolling_vol.iloc[:, company].fillna(0).values
+            low_threshold = np.percentile(col, 33)
+            high_threshold = np.percentile(col, 66)
+            for day in range(self.total_days):
+                if col[day] <= low_threshold:
+                    discretized[day, company] = 0  # low volatility
+                elif col[day] <= high_threshold:
+                    discretized[day, company] = 1  # medium volatility
+                else:
+                    discretized[day, company] = 2  # high volatility
+
+        return discretized
+
+    def get_discretized_state(self):
+        # combines volatility signal with holdings info into a compact discrete state
+        # volatility: 0=low, 1=medium, 2=high — one value per company
+        vol = self.volatility[self.today]
+        # holdings: 0=not holding, 1=holding — one value per company
+        holdings = (self.stocks > 0).astype(int)
+        # concatenate into a single tuple: (vol_company1, ..., holding_company1, ...)
+        return tuple(np.concatenate([vol, holdings]))
 
     def get_episode_value(self):
         return self._get_eval()
@@ -72,7 +108,7 @@ class market:
         done = self.today == (self.total_days - 1)
         return self._get_state(), reward, done
 
-    def _exchange(self, action):
+    def _exchange(self, action): # _ before method name indicates it's intended to be internal/private
         actions = self.action_list[action] # [0,1,0]
 
         sell_list = []
@@ -101,10 +137,10 @@ class market:
                         broke = True
 
 
-    def _get_eval(self):
+    def _get_eval(self): # _ before method name indicates it's intended to be internal/private
         return self.stocks.dot(self.stock_price) + self.money_available
 
-    def _get_state(self):
+    def _get_state(self): # _ before method name indicates it's intended to be internal/private
         state = np.zeros(self.state_size) #[0,0,0,0,0,0,0]
         state[:self.total_companies] = self.stocks
         state[self.total_companies:self.total_companies*2] = self.stock_price
