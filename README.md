@@ -1,17 +1,25 @@
 # RL Trading Bot
 
-A Python project for experimenting with market data, analysis scripts, and reinforcement learning style trading workflows.
+## Overview
+Brief description of the project — what it does, what problem it solves.
 
-## Project Structure
+## Agents
+- **Random** — baseline, uniform random actions
+- **Momentum** — buys/sells based on price trend over a window
+- **Buy & Hold** — buys on day 1 and holds until the end
+- **Q-Learning** — tabular Q-learning with several state representations
 
-```text
-RL_TRADING_BOT/
-├── data/                   # downloaded or generated market data
-├── market.py               # main market/data processing script
-├── momentumagent.py        # momentum-based agent logic
-├── randomAgent.py          # baseline random agent
-├── Market_e_Proyecto.ipynb # notebook for exploration/testing
-├── script_catpole.ipynb    # notebook experiments
-├── requirements.txt        # Python dependencies
-├── .gitignore
-└── README.md
+## State Representations
+- Raw state (prices, holdings, cash)
+- Discretized volatility + holdings
+- Discretized volatility + momentum + holdings
+
+## Results
+Brief summary of findings — e.g. Buy & Hold dominates on a bull market, Q-Learning with discretized state shows learning but doesn't beat passive strategies.
+
+## Notebook
+[View notebook](https://github.com/luisparadinha/pg_rl_trading_bot/blob/master/Market_e_Projecto.ipynb)
+
+## Requirements
+```bash
+pip install -r requirements.txt
