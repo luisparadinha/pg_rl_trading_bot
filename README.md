@@ -1,8 +1,5 @@
 # RL Trading Bot
 
-## Overview
-Brief description of the project — what it does, what problem it solves.
-
 ## Agents
 - **Random** — baseline, uniform random actions
 - **Momentum** — buys/sells based on price trend over a window
